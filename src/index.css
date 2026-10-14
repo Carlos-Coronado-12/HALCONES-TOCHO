@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-turf: #0d2214;
+    --color-turf-stripe: #102a19;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  input, textarea, select {
+    user-select: auto;
+    -webkit-user-select: auto;
+  }
+
+  body {
+    background-color: #0c120e;
+    color: #f1f5f9;
+  }
+
+  /* Custom crisp scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #0c120e;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #26382c;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #344c3c;
+  }
+}
+
+/* Impeccable Clean Surfaces */
+.surface-panel {
+  background-color: #131c16;
+  border: 1px solid #26382c;
+}
+
+.surface-card {
+  background-color: #18241d;
+  border: 1px solid #26382c;
+}
+
+.canvas-container {
+  touch-action: none;
+}

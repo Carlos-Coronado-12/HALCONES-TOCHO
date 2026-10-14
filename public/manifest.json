@@ -1,0 +1,18 @@
+{
+  "name": "Halcones Tocho Playbook",
+  "short_name": "Halcones PB",
+  "description": "Playbook Interactivo y Pizarra Táctica para Flag Football (Tocho Bandera)",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#0f172a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%230f172a'/%3E%3Cpath d='M256 90 L390 180 L390 350 L256 430 L122 350 L122 180 Z' fill='%2314b8a6'/%3E%3Ccircle cx='256' cy='260' r='60' fill='%230f172a'/%3E%3Ctext x='256' y='275' font-size='44' font-weight='bold' fill='%2338bdf8' text-anchor='middle'%3E🦅%3C/text%3E%3C/svg%3E",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
