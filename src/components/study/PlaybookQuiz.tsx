@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Play, PlayerRole } from '../../types/playbook';
 import { UserStudyStats } from '../../types/study';
 import { 
@@ -7,7 +7,8 @@ import {
   HelpCircle,
   ArrowRight, 
   UserCheck, 
-  Sparkles 
+  Sparkles,
+  Zap 
 } from 'lucide-react';
 
 interface PlaybookQuizProps {
@@ -32,6 +33,17 @@ export const PlaybookQuiz: React.FC<PlaybookQuizProps> = ({ plays, stats, onUpda
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState<boolean>(false);
   const [showHint, setShowHint] = useState<boolean>(false);
+  const [autoAdvance, setAutoAdvance] = useState<boolean>(true);
+  const autoAdvanceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Clear timer on unmount
+  useEffect(() => {
+    return () => {
+      if (autoAdvanceTimerRef.current) {
+        clearTimeout(autoAdvanceTimerRef.current);
+      }
+    };
+  }, []);
 
   // Generate dynamic questions from the active plays in Halcones Playbook
   const generatedQuestions = useMemo<DynamicQuestion[]>(() => {
@@ -162,9 +174,21 @@ export const PlaybookQuiz: React.FC<PlaybookQuizProps> = ({ plays, stats, onUpda
         },
       },
     });
+
+    // Auto-advance to next question
+    if (autoAdvance) {
+      if (autoAdvanceTimerRef.current) clearTimeout(autoAdvanceTimerRef.current);
+      autoAdvanceTimerRef.current = setTimeout(() => {
+        handleNext();
+      }, isCorrect ? 1500 : 3000);
+    }
   };
 
   const handleNext = () => {
+    if (autoAdvanceTimerRef.current) {
+      clearTimeout(autoAdvanceTimerRef.current);
+      autoAdvanceTimerRef.current = null;
+    }
     if (currentIndex < filteredQuestions.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
@@ -209,8 +233,31 @@ export const PlaybookQuiz: React.FC<PlaybookQuizProps> = ({ plays, stats, onUpda
           })}
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-emerald-300 font-mono bg-[#111f15] px-3 py-1 rounded-xl border border-[#213a27]">
-          <span>Reto {currentIndex + 1} de {filteredQuestions.length || 1}</span>
+        <div className="flex items-center gap-2">
+          {/* Auto-advance toggle */}
+          <button
+            type="button"
+            onClick={() => {
+              if (autoAdvance && autoAdvanceTimerRef.current) {
+                clearTimeout(autoAdvanceTimerRef.current);
+                autoAdvanceTimerRef.current = null;
+              }
+              setAutoAdvance(!autoAdvance);
+            }}
+            className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              autoAdvance 
+                ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/40 shadow-sm' 
+                : 'bg-[#121c15] text-slate-400 border border-[#1b2b20]'
+            }`}
+            title="Avanzar automáticamente a la siguiente pregunta tras responder"
+          >
+            <Zap className={`w-3.5 h-3.5 ${autoAdvance ? 'text-emerald-400 fill-emerald-400' : 'text-slate-500'}`} />
+            <span>Auto: {autoAdvance ? 'ON' : 'OFF'}</span>
+          </button>
+
+          <div className="flex items-center gap-2 text-xs text-emerald-300 font-mono bg-[#111f15] px-3 py-1 rounded-xl border border-[#213a27]">
+            <span>Reto {currentIndex + 1} de {filteredQuestions.length || 1}</span>
+          </div>
         </div>
       </div>
 
@@ -383,22 +430,39 @@ export const PlaybookQuiz: React.FC<PlaybookQuizProps> = ({ plays, stats, onUpda
                     ? 'bg-emerald-950/50 border-emerald-500/40 text-emerald-100'
                     : 'bg-rose-950/50 border-rose-500/40 text-rose-100'
                 }`}>
-                  <div className="flex items-center gap-1.5 mb-1 text-xs font-extrabold">
-                    {selectedOption === currentQ.correctIndex ? (
-                      <>
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                        <span>¡Correcto! Buena memoria táctica.</span>
-                      </>
-                    ) : (
-                      <>
-                        <XCircle className="w-3.5 h-3.5 text-rose-400" />
-                        <span>Fundamento táctico:</span>
-                      </>
+                  <div className="flex items-center justify-between gap-1.5 mb-1 text-xs font-extrabold">
+                    <div className="flex items-center gap-1.5">
+                      {selectedOption === currentQ.correctIndex ? (
+                        <>
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>¡Correcto! Buena memoria táctica.</span>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="w-3.5 h-3.5 text-rose-400" />
+                          <span>Fundamento táctico:</span>
+                        </>
+                      )}
+                    </div>
+                    {autoAdvance && (
+                      <span className="text-[10px] text-emerald-300 font-mono animate-pulse">
+                        Avanzando...
+                      </span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-200 leading-snug">
+                  <p className="text-xs text-slate-200 leading-snug mb-2.5">
                     {currentQ.explanation}
                   </p>
+
+                  {/* Direct Action Button right inside feedback */}
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md active:scale-[0.98] transition-all"
+                  >
+                    <span>{currentIndex < filteredQuestions.length - 1 ? 'Siguiente Pregunta' : 'Finalizar Ronda'}</span>
+                    <ArrowRight className="w-3.5 h-3.5 stroke-[3]" />
+                  </button>
                 </div>
               )}
             </div>

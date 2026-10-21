@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { StudyCategory, UserStudyStats } from '../../types/study';
 import { IFAF_QUIZ_QUESTIONS } from '../../constants/fundamentalsData';
 import { 
@@ -8,7 +8,8 @@ import {
   RotateCcw, 
   Flame, 
   Filter,
-  Sparkles
+  Sparkles,
+  Zap
 } from 'lucide-react';
 
 interface FundamentalsQuizProps {
@@ -23,6 +24,17 @@ export const FundamentalsQuiz: React.FC<FundamentalsQuizProps> = ({ stats, onUpd
   const [isAnswered, setIsAnswered] = useState<boolean>(false);
   const [quizScore, setQuizScore] = useState<{ correct: number; total: number }>({ correct: 0, total: 0 });
   const [showCelebration, setShowCelebration] = useState<boolean>(false);
+  const [autoAdvance, setAutoAdvance] = useState<boolean>(true);
+  const autoAdvanceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Clear timer on unmount
+  useEffect(() => {
+    return () => {
+      if (autoAdvanceTimerRef.current) {
+        clearTimeout(autoAdvanceTimerRef.current);
+      }
+    };
+  }, []);
 
   // Filter questions based on category
   const filteredQuestions = useMemo(() => {
@@ -31,6 +43,21 @@ export const FundamentalsQuiz: React.FC<FundamentalsQuizProps> = ({ stats, onUpd
   }, [selectedCategory]);
 
   const currentQ = filteredQuestions[currentIndex] || filteredQuestions[0];
+
+  const handleNext = () => {
+    if (autoAdvanceTimerRef.current) {
+      clearTimeout(autoAdvanceTimerRef.current);
+      autoAdvanceTimerRef.current = null;
+    }
+    if (currentIndex < filteredQuestions.length - 1) {
+      setCurrentIndex((prev) => prev + 1);
+    } else {
+      // Loop or restart
+      setCurrentIndex(0);
+    }
+    setSelectedOption(null);
+    setIsAnswered(false);
+  };
 
   const handleSelectOption = (index: number) => {
     if (isAnswered) return;
@@ -72,20 +99,21 @@ export const FundamentalsQuiz: React.FC<FundamentalsQuizProps> = ({ stats, onUpd
       setShowCelebration(true);
       setTimeout(() => setShowCelebration(false), 2500);
     }
-  };
 
-  const handleNext = () => {
-    if (currentIndex < filteredQuestions.length - 1) {
-      setCurrentIndex((prev) => prev + 1);
-    } else {
-      // Loop or restart
-      setCurrentIndex(0);
+    // Auto-advance to next question
+    if (autoAdvance) {
+      if (autoAdvanceTimerRef.current) clearTimeout(autoAdvanceTimerRef.current);
+      autoAdvanceTimerRef.current = setTimeout(() => {
+        handleNext();
+      }, isCorrect ? 1500 : 3000);
     }
-    setSelectedOption(null);
-    setIsAnswered(false);
   };
 
   const handleResetQuiz = () => {
+    if (autoAdvanceTimerRef.current) {
+      clearTimeout(autoAdvanceTimerRef.current);
+      autoAdvanceTimerRef.current = null;
+    }
     setCurrentIndex(0);
     setSelectedOption(null);
     setIsAnswered(false);
@@ -182,7 +210,28 @@ export const FundamentalsQuiz: React.FC<FundamentalsQuizProps> = ({ stats, onUpd
         </div>
 
         {/* Streaks & Accuracy Counter */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          {/* Auto-advance toggle */}
+          <button
+            type="button"
+            onClick={() => {
+              if (autoAdvance && autoAdvanceTimerRef.current) {
+                clearTimeout(autoAdvanceTimerRef.current);
+                autoAdvanceTimerRef.current = null;
+              }
+              setAutoAdvance(!autoAdvance);
+            }}
+            className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              autoAdvance 
+                ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/40 shadow-sm' 
+                : 'bg-[#121c15] text-slate-400 border border-[#1b2b20]'
+            }`}
+            title="Avanzar automáticamente a la siguiente pregunta tras responder"
+          >
+            <Zap className={`w-3.5 h-3.5 ${autoAdvance ? 'text-emerald-400 fill-emerald-400' : 'text-slate-500'}`} />
+            <span>Auto: {autoAdvance ? 'ON' : 'OFF'}</span>
+          </button>
+
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-orange-950/50 border border-orange-500/40 text-orange-300 font-extrabold text-xs">
             <Flame className="w-4 h-4 text-orange-400 fill-orange-400" />
             <span>Racha: {stats.currentStreak}</span>
@@ -294,27 +343,44 @@ export const FundamentalsQuiz: React.FC<FundamentalsQuizProps> = ({ stats, onUpd
 
         {/* Feedback / Pedagogical Explanation Box */}
         {isAnswered && (
-          <div className={`p-4 rounded-2xl border mb-5 animate-in fade-in slide-in-from-bottom-2 duration-200 ${
+          <div className={`p-4 sm:p-5 rounded-2xl border mb-5 animate-in fade-in slide-in-from-bottom-2 duration-200 ${
             selectedOption === currentQ.correctIndex
-              ? 'bg-emerald-950/50 border-emerald-500/40 text-emerald-100'
-              : 'bg-rose-950/50 border-rose-500/40 text-rose-100'
+              ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-100'
+              : 'bg-rose-950/60 border-rose-500/50 text-rose-100'
           }`}>
-            <div className="flex items-center gap-2 mb-1.5 font-extrabold text-sm">
-              {selectedOption === currentQ.correctIndex ? (
-                <>
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span>¡Correcto! Excelente lectura de juego.</span>
-                </>
-              ) : (
-                <>
-                  <XCircle className="w-4 h-4 text-rose-400" />
-                  <span>Respuesta Incorrecta. Fíjate en el fundamento:</span>
-                </>
+            <div className="flex items-center justify-between gap-2 mb-2 font-black text-sm sm:text-base">
+              <div className="flex items-center gap-2">
+                {selectedOption === currentQ.correctIndex ? (
+                  <>
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                    <span>¡Correcto! Excelente lectura de juego.</span>
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="w-5 h-5 text-rose-400" />
+                    <span>Respuesta Incorrecta. Fíjate en el fundamento:</span>
+                  </>
+                )}
+              </div>
+              {autoAdvance && (
+                <span className="text-[11px] text-emerald-300/80 font-mono font-medium animate-pulse">
+                  Avanzando automáticamente...
+                </span>
               )}
             </div>
-            <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-200 leading-relaxed mb-4">
               {currentQ.explanation}
             </p>
+
+            {/* Direct Prominent Action Button inside Feedback */}
+            <button
+              type="button"
+              onClick={handleNext}
+              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/80 active:scale-[0.98] transition-all"
+            >
+              <span>{currentIndex < filteredQuestions.length - 1 ? 'Siguiente Pregunta' : 'Finalizar Ronda'}</span>
+              <ArrowRight className="w-4 h-4 stroke-[3]" />
+            </button>
           </div>
         )}
 
