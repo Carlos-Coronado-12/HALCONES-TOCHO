@@ -32,7 +32,7 @@ import { mirrorPlay } from './utils/playTransforms';
 import { generateConceptRoutes, ConceptId, ConceptSide, PASS_CONCEPTS } from './utils/concepts';
 import { computeFlagPullEvent } from './utils/flagPull';
 import { isFirebaseConfigured } from './services/firebase';
-import { savePlayToCloud, deletePlayFromCloud, fetchPlaysFromCloud } from './services/cloudPlaybook';
+import { savePlayToCloud, deletePlayFromCloud, fetchPlaysFromCloud, subscribeToCloudPlays, DEFAULT_TEAM_ID } from './services/cloudPlaybook';
 
 import { Header } from './components/Header';
 import { Toolbar } from './components/Toolbar';
@@ -105,7 +105,7 @@ export const App: React.FC = () => {
     saveUserStudyStats(newStats);
   };
 
-  // Initial synchronization with Cloud Firestore if configured
+  // Initial synchronization and real-time subscription with Cloud Firestore
   useEffect(() => {
     if (!isFirebaseConfigured()) return;
 
@@ -121,6 +121,23 @@ export const App: React.FC = () => {
         });
       }
     });
+
+    const unsubscribe = subscribeToCloudPlays(DEFAULT_TEAM_ID, (cloudPlays) => {
+      if (cloudPlays && cloudPlays.length > 0) {
+        setPlays((prevPlays) => {
+          const map = new Map<string, Play>();
+          prevPlays.forEach((p) => map.set(p.id, p));
+          cloudPlays.forEach((p) => map.set(p.id, p));
+          const merged = Array.from(map.values());
+          saveAllPlays(merged);
+          return merged;
+        });
+      }
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   // Save snapshot to history
