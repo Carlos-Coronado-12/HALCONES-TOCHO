@@ -93,7 +93,7 @@ export const OFFICIAL_ROUTE_TREE: RouteDefinition[] = [
     depthYards: '15+ yardas (Fondo)',
     description: 'Velocidad pura en línea recta por la banda o por los números para desbordar al defensivo en velocidad.',
     keyCoachingPoint: 'Mantén la separación de la banda (al menos 3 yardas para que haya espacio de atrapar) y ubica el hombro exterior.',
-    pathPoints: [{ x: 50, y: 80 }, { x: 50, y: 50 }, { x: 50, y: 15 }]
+    pathPoints: [{ x: 75, y: 80 }, { x: 75, y: 48 }, { x: 75, y: 16 }]
   },
   {
     number: 0,
@@ -316,7 +316,7 @@ export const IFAF_QUIZ_QUESTIONS: QuizQuestion[] = [
     category: 'route_tree',
     difficulty: 'basico',
     question: '¿Qué ruta vertical a fondo por la banda representa este diagrama?',
-    routePoints: [{ x: 50, y: 80 }, { x: 50, y: 50 }, { x: 50, y: 15 }],
+    routePoints: [{ x: 75, y: 80 }, { x: 75, y: 48 }, { x: 75, y: 16 }],
     routeNumber: 9,
     options: [
       'Pase Bomba (Fly / Go - Ruta 9)',

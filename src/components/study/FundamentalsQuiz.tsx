@@ -256,7 +256,7 @@ export const FundamentalsQuiz: React.FC<FundamentalsQuizProps> = ({ stats, onUpd
                   <marker id="quizArrowHead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
                     <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#34d399" />
                   </marker>
-                  <filter id="quizGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <filter id="quizGlow" filterUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
                     <feDropShadow dx="0" dy="0" stdDeviation="1.5" floodColor="#34d399" floodOpacity="0.9" />
                   </filter>
                 </defs>

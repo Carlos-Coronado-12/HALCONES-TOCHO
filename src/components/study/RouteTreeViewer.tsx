@@ -202,7 +202,7 @@ export const RouteTreeViewer: React.FC<RouteTreeViewerProps> = () => {
                 <path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5" />
               </pattern>
               {/* Glow filter for route line */}
-              <filter id="routeGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <filter id="routeGlow" filterUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
                 <feDropShadow dx="0" dy="0" stdDeviation="1.5" floodColor="#34d399" floodOpacity="0.8" />
               </filter>
             </defs>
