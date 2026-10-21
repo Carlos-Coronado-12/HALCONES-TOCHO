@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { StudyCategory, UserStudyStats } from '../../types/study';
 import { IFAF_QUIZ_QUESTIONS } from '../../constants/fundamentalsData';
 import { 
@@ -8,8 +8,7 @@ import {
   RotateCcw, 
   Flame, 
   Filter,
-  Sparkles,
-  Zap
+  Sparkles
 } from 'lucide-react';
 
 interface FundamentalsQuizProps {
@@ -24,17 +23,6 @@ export const FundamentalsQuiz: React.FC<FundamentalsQuizProps> = ({ stats, onUpd
   const [isAnswered, setIsAnswered] = useState<boolean>(false);
   const [quizScore, setQuizScore] = useState<{ correct: number; total: number }>({ correct: 0, total: 0 });
   const [showCelebration, setShowCelebration] = useState<boolean>(false);
-  const [autoAdvance, setAutoAdvance] = useState<boolean>(true);
-  const autoAdvanceTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Clear timer on unmount
-  useEffect(() => {
-    return () => {
-      if (autoAdvanceTimerRef.current) {
-        clearTimeout(autoAdvanceTimerRef.current);
-      }
-    };
-  }, []);
 
   // Filter questions based on category
   const filteredQuestions = useMemo(() => {
@@ -45,10 +33,6 @@ export const FundamentalsQuiz: React.FC<FundamentalsQuizProps> = ({ stats, onUpd
   const currentQ = filteredQuestions[currentIndex] || filteredQuestions[0];
 
   const handleNext = () => {
-    if (autoAdvanceTimerRef.current) {
-      clearTimeout(autoAdvanceTimerRef.current);
-      autoAdvanceTimerRef.current = null;
-    }
     if (currentIndex < filteredQuestions.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
@@ -99,21 +83,9 @@ export const FundamentalsQuiz: React.FC<FundamentalsQuizProps> = ({ stats, onUpd
       setShowCelebration(true);
       setTimeout(() => setShowCelebration(false), 2500);
     }
-
-    // Auto-advance to next question
-    if (autoAdvance) {
-      if (autoAdvanceTimerRef.current) clearTimeout(autoAdvanceTimerRef.current);
-      autoAdvanceTimerRef.current = setTimeout(() => {
-        handleNext();
-      }, isCorrect ? 1500 : 3000);
-    }
   };
 
   const handleResetQuiz = () => {
-    if (autoAdvanceTimerRef.current) {
-      clearTimeout(autoAdvanceTimerRef.current);
-      autoAdvanceTimerRef.current = null;
-    }
     setCurrentIndex(0);
     setSelectedOption(null);
     setIsAnswered(false);
@@ -134,7 +106,7 @@ export const FundamentalsQuiz: React.FC<FundamentalsQuizProps> = ({ stats, onUpd
   };
 
   return (
-    <div className="flex flex-col gap-5 max-w-4xl mx-auto h-full">
+    <div className="flex flex-col gap-5 max-w-4xl mx-auto w-full">
       {/* Top Filter and Streaks Ribbon */}
       <div className="flex flex-wrap items-center justify-between gap-3 bg-[#0a120c] border border-[#1b2b20] p-3 rounded-2xl shadow-lg">
         {/* Category Filters */}
@@ -211,27 +183,6 @@ export const FundamentalsQuiz: React.FC<FundamentalsQuizProps> = ({ stats, onUpd
 
         {/* Streaks & Accuracy Counter */}
         <div className="flex items-center gap-2.5">
-          {/* Auto-advance toggle */}
-          <button
-            type="button"
-            onClick={() => {
-              if (autoAdvance && autoAdvanceTimerRef.current) {
-                clearTimeout(autoAdvanceTimerRef.current);
-                autoAdvanceTimerRef.current = null;
-              }
-              setAutoAdvance(!autoAdvance);
-            }}
-            className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-              autoAdvance 
-                ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/40 shadow-sm' 
-                : 'bg-[#121c15] text-slate-400 border border-[#1b2b20]'
-            }`}
-            title="Avanzar automáticamente a la siguiente pregunta tras responder"
-          >
-            <Zap className={`w-3.5 h-3.5 ${autoAdvance ? 'text-emerald-400 fill-emerald-400' : 'text-slate-500'}`} />
-            <span>Auto: {autoAdvance ? 'ON' : 'OFF'}</span>
-          </button>
-
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-orange-950/50 border border-orange-500/40 text-orange-300 font-extrabold text-xs">
             <Flame className="w-4 h-4 text-orange-400 fill-orange-400" />
             <span>Racha: {stats.currentStreak}</span>
@@ -262,7 +213,7 @@ export const FundamentalsQuiz: React.FC<FundamentalsQuizProps> = ({ stats, onUpd
       )}
 
       {/* Main Question Card */}
-      <div className="bg-[#0b140e] border border-[#1d2f22] rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden flex flex-col justify-between">
+      <div className="bg-[#0b140e] border border-[#1d2f22] rounded-3xl p-5 sm:p-7 shadow-2xl relative flex flex-col justify-between">
         {/* Category & Difficulty Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -436,11 +387,6 @@ export const FundamentalsQuiz: React.FC<FundamentalsQuizProps> = ({ stats, onUpd
                   </>
                 )}
               </div>
-              {autoAdvance && (
-                <span className="text-[11px] text-emerald-300/80 font-mono font-medium animate-pulse">
-                  Avanzando automáticamente...
-                </span>
-              )}
             </div>
             <p className="text-xs sm:text-sm text-slate-200 leading-relaxed mb-4">
               {currentQ.explanation}

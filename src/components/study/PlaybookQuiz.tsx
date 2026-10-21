@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Play, PlayerRole } from '../../types/playbook';
 import { UserStudyStats } from '../../types/study';
 import { 
@@ -7,8 +7,7 @@ import {
   HelpCircle,
   ArrowRight, 
   UserCheck, 
-  Sparkles,
-  Zap 
+  Sparkles
 } from 'lucide-react';
 
 interface PlaybookQuizProps {
@@ -33,17 +32,6 @@ export const PlaybookQuiz: React.FC<PlaybookQuizProps> = ({ plays, stats, onUpda
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState<boolean>(false);
   const [showHint, setShowHint] = useState<boolean>(false);
-  const [autoAdvance, setAutoAdvance] = useState<boolean>(true);
-  const autoAdvanceTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Clear timer on unmount
-  useEffect(() => {
-    return () => {
-      if (autoAdvanceTimerRef.current) {
-        clearTimeout(autoAdvanceTimerRef.current);
-      }
-    };
-  }, []);
 
   // Generate dynamic questions from the active plays in Halcones Playbook
   const generatedQuestions = useMemo<DynamicQuestion[]>(() => {
@@ -175,20 +163,9 @@ export const PlaybookQuiz: React.FC<PlaybookQuizProps> = ({ plays, stats, onUpda
       },
     });
 
-    // Auto-advance to next question
-    if (autoAdvance) {
-      if (autoAdvanceTimerRef.current) clearTimeout(autoAdvanceTimerRef.current);
-      autoAdvanceTimerRef.current = setTimeout(() => {
-        handleNext();
-      }, isCorrect ? 1500 : 3000);
-    }
   };
 
   const handleNext = () => {
-    if (autoAdvanceTimerRef.current) {
-      clearTimeout(autoAdvanceTimerRef.current);
-      autoAdvanceTimerRef.current = null;
-    }
     if (currentIndex < filteredQuestions.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
@@ -200,7 +177,7 @@ export const PlaybookQuiz: React.FC<PlaybookQuizProps> = ({ plays, stats, onUpda
   };
 
   return (
-    <div className="flex flex-col gap-5 max-w-4xl mx-auto h-full">
+    <div className="flex flex-col gap-5 max-w-4xl mx-auto w-full">
       {/* Role Picker Bar */}
       <div className="bg-[#0b140e] border border-[#1b2b20] p-3 rounded-2xl shadow-lg flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-1.5">
@@ -234,27 +211,6 @@ export const PlaybookQuiz: React.FC<PlaybookQuizProps> = ({ plays, stats, onUpda
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Auto-advance toggle */}
-          <button
-            type="button"
-            onClick={() => {
-              if (autoAdvance && autoAdvanceTimerRef.current) {
-                clearTimeout(autoAdvanceTimerRef.current);
-                autoAdvanceTimerRef.current = null;
-              }
-              setAutoAdvance(!autoAdvance);
-            }}
-            className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-              autoAdvance 
-                ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/40 shadow-sm' 
-                : 'bg-[#121c15] text-slate-400 border border-[#1b2b20]'
-            }`}
-            title="Avanzar automáticamente a la siguiente pregunta tras responder"
-          >
-            <Zap className={`w-3.5 h-3.5 ${autoAdvance ? 'text-emerald-400 fill-emerald-400' : 'text-slate-500'}`} />
-            <span>Auto: {autoAdvance ? 'ON' : 'OFF'}</span>
-          </button>
-
           <div className="flex items-center gap-2 text-xs text-emerald-300 font-mono bg-[#111f15] px-3 py-1 rounded-xl border border-[#213a27]">
             <span>Reto {currentIndex + 1} de {filteredQuestions.length || 1}</span>
           </div>
@@ -262,7 +218,7 @@ export const PlaybookQuiz: React.FC<PlaybookQuizProps> = ({ plays, stats, onUpda
       </div>
 
       {/* Main Challenge Card in 2-Column Responsive Layout */}
-      <div className="bg-[#0b140e] border border-[#1d2f22] rounded-3xl p-4 sm:p-6 shadow-2xl relative overflow-hidden flex flex-col justify-between">
+      <div className="bg-[#0b140e] border border-[#1d2f22] rounded-3xl p-4 sm:p-6 shadow-2xl relative flex flex-col justify-between">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
           
           {/* Left Column: Play Banner & Tactical Canvas Snapshot */}
@@ -444,11 +400,6 @@ export const PlaybookQuiz: React.FC<PlaybookQuizProps> = ({ plays, stats, onUpda
                         </>
                       )}
                     </div>
-                    {autoAdvance && (
-                      <span className="text-[10px] text-emerald-300 font-mono animate-pulse">
-                        Avanzando...
-                      </span>
-                    )}
                   </div>
                   <p className="text-xs text-slate-200 leading-snug mb-2.5">
                     {currentQ.explanation}
