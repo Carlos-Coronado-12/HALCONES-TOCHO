@@ -50,20 +50,17 @@ export const RouteTreeViewer: React.FC<RouteTreeViewerProps> = () => {
         y: pts[0].y + (pts[1].y - pts[0].y) * animProgress,
       };
     }
-    // 3 points (Start -> Stem/Cut -> End)
-    if (animProgress <= 0.45) {
-      const p = animProgress / 0.45;
-      return {
-        x: pts[0].x + (pts[1].x - pts[0].x) * p,
-        y: pts[0].y + (pts[1].y - pts[0].y) * p,
-      };
-    } else {
-      const p = (animProgress - 0.45) / 0.55;
-      return {
-        x: pts[1].x + (pts[2].x - pts[1].x) * p,
-        y: pts[1].y + (pts[2].y - pts[1].y) * p,
-      };
-    }
+    // Generalized multi-segment interpolation
+    const totalSegments = pts.length - 1;
+    const segT = animProgress * totalSegments;
+    const segIdx = Math.min(Math.floor(segT), totalSegments - 1);
+    const localT = segT - segIdx;
+    const p1 = pts[segIdx];
+    const p2 = pts[segIdx + 1];
+    return {
+      x: p1.x + (p2.x - p1.x) * localT,
+      y: p1.y + (p2.y - p1.y) * localT,
+    };
   };
 
   const runnerPos = getRunnerPos();

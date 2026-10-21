@@ -43,7 +43,7 @@ export const OFFICIAL_ROUTE_TREE: RouteDefinition[] = [
     depthYards: '5 a 7 yardas',
     description: 'Ataque vertical al defensivo a máxima velocidad para obligarlo a retroceder en backpedal, freno en seco y regreso de 1 yarda hacia el quarterback.',
     keyCoachingPoint: 'Frena agresivamente y ven hacia el balón; nunca esperes el pase quieto porque el defensor te arrancará la bandera o bateará.',
-    pathPoints: [{ x: 50, y: 80 }, { x: 50, y: 60 }, { x: 48, y: 64 }]
+    pathPoints: [{ x: 50, y: 80 }, { x: 50, y: 58 }, { x: 42, y: 58 }, { x: 38, y: 68 }]
   },
   {
     number: 5,
@@ -53,7 +53,7 @@ export const OFFICIAL_ROUTE_TREE: RouteDefinition[] = [
     depthYards: '10 a 12 yardas',
     description: 'Ruta profunda por la banda. A las 10-12 yardas, clava el pie y corta a 45 grados de regreso hacia el QB y la línea lateral.',
     keyCoachingPoint: 'Excelente arma contra defensivas en zona o esquineros con colchón profundo (Off-Coverage). El balón debe ser lanzado antes del corte.',
-    pathPoints: [{ x: 50, y: 80 }, { x: 50, y: 46 }, { x: 82, y: 56 }]
+    pathPoints: [{ x: 50, y: 80 }, { x: 50, y: 46 }, { x: 58, y: 46 }, { x: 78, y: 58 }]
   },
   {
     number: 6,
@@ -282,7 +282,7 @@ export const IFAF_QUIZ_QUESTIONS: QuizQuestion[] = [
     category: 'route_tree',
     difficulty: 'basico',
     question: 'El receptor ataca verticalmente, frena en seco a 5 yardas y regresa hacia el pasador. ¿Qué ruta es?',
-    routePoints: [{ x: 50, y: 80 }, { x: 50, y: 60 }, { x: 48, y: 64 }],
+    routePoints: [{ x: 50, y: 80 }, { x: 50, y: 58 }, { x: 42, y: 58 }, { x: 38, y: 68 }],
     routeNumber: 4,
     options: [
       'Quick Out (Ruta 3)',
@@ -333,7 +333,7 @@ export const IFAF_QUIZ_QUESTIONS: QuizQuestion[] = [
     category: 'route_tree',
     difficulty: 'intermedio',
     question: 'Sube 10-12 yardas a velocidad y rompe en diagonal de regreso hacia el QB y la banda. ¿Qué ruta es?',
-    routePoints: [{ x: 50, y: 80 }, { x: 50, y: 46 }, { x: 82, y: 56 }],
+    routePoints: [{ x: 50, y: 80 }, { x: 50, y: 46 }, { x: 58, y: 46 }, { x: 78, y: 58 }],
     routeNumber: 5,
     options: [
       'Quick Out (Ruta 3)',
