@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
-  Menu, 
   Save, 
   Plus, 
   Share2, 
@@ -11,9 +10,11 @@ import {
   Swords,
   ChevronDown,
   CheckCircle2,
-  FolderOpen
+  FolderOpen,
+  GraduationCap,
+  Home
 } from 'lucide-react';
-import { Play, PlayCategory, FieldViewMode, DefenseScheme } from '../types/playbook';
+import { Play, PlayCategory, FieldViewMode, DefenseScheme, AppSectionView } from '../types/playbook';
 import { DEFENSE_SCHEMES_DATA } from '../constants/presets';
 
 interface HeaderProps {
@@ -22,12 +23,15 @@ interface HeaderProps {
   onChangeViewMode: (mode: FieldViewMode) => void;
   defenseScheme: DefenseScheme;
   onChangeDefenseScheme?: (scheme: DefenseScheme) => void;
+  activeSection: AppSectionView;
+  onNavigate: (section: AppSectionView) => void;
   onOpenSidebar: () => void;
   onOpenSaveModal: () => void;
   onNewPlay: () => void;
   onOpenFormationPicker: () => void;
   onExportImage: () => void;
   onOpenExportModal: () => void;
+  onOpenStudyCenter?: () => void;
   isDirty?: boolean;
   onLoadOffense: () => void;
   onSaveOffense: () => void;
@@ -42,12 +46,15 @@ export const Header: React.FC<HeaderProps> = ({
   viewMode,
   onChangeViewMode,
   defenseScheme,
+  activeSection,
+  onNavigate,
   onOpenSidebar,
   onOpenSaveModal,
   onNewPlay,
   onOpenFormationPicker,
   onExportImage,
   onOpenExportModal,
+  onOpenStudyCenter,
   isDirty,
   onLoadOffense,
   onSaveOffense,
@@ -109,25 +116,22 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="sticky top-0 z-30 bg-[#080d0a]/95 backdrop-blur-xl border-b border-[#1b2b20] px-3 sm:px-4 py-2 flex items-center justify-between shadow-2xl gap-2">
-      {/* 1. Left: Branding & Playbook Drawer Toggle */}
+      {/* 1. Left: Branding & Global Navigation Switcher */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* Tecmilenio Halcones Athletic Logo Badge (Clickable to return Home) */}
         <button
-          onClick={onOpenSidebar}
-          className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-[#121c15] hover:bg-[#1a291e] text-slate-200 flex items-center gap-2 transition-all border border-[#203426] shadow-sm group"
-          title="Abrir Playbook y Biblioteca de Jugadas"
-          id="btn-open-playbook"
+          type="button"
+          onClick={() => onNavigate('home')}
+          className="flex items-center gap-2.5 text-left group"
+          title="Regresar al Menú Principal"
         >
-          <Menu className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
-          <span className="hidden md:inline font-bold text-xs tracking-wider uppercase">Playbook</span>
-        </button>
-
-        {/* Tecmilenio Halcones Athletic Logo Badge */}
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-[#00a859] to-[#00542a] border border-emerald-400/50 flex items-center justify-center font-black text-white text-sm tracking-tighter shadow-md">
-            H
-          </div>
-          <div className="hidden sm:block">
-            <div className="flex items-center gap-1.5 leading-none">
+          <img
+            src={`${import.meta.env.BASE_URL}halcones-logo-clean.png`}
+            alt="Halcones Logo"
+            className="w-8 h-8 object-contain drop-shadow-[0_0_8px_rgba(0,168,89,0.5)] group-hover:scale-110 transition-transform"
+          />
+          <div className="hidden sm:block leading-tight">
+            <div className="flex items-center gap-1.5">
               <span className="font-extrabold text-xs sm:text-sm tracking-wide text-white uppercase font-display">
                 Halcones
               </span>
@@ -135,32 +139,78 @@ export const Header: React.FC<HeaderProps> = ({
                 Tocho
               </span>
             </div>
-            <p className="text-[9px] text-neutral-400 font-mono mt-0.5">TACTICAL BOARD</p>
+            <p className="text-[9px] text-neutral-400 font-mono mt-0.5">TACTICAL HUB</p>
           </div>
+        </button>
+
+        {/* Global Navigation Switcher: [Menú | Pizarra | Biblioteca | Academia] */}
+        <div className="flex items-center gap-1 bg-[#0a140d] p-1 rounded-2xl border border-[#1e3424] shadow-inner">
+          <button
+            type="button"
+            onClick={() => onNavigate('home')}
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+              activeSection === 'home'
+                ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-slate-950 shadow-md shadow-emerald-950/60 font-black'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-[#121f16]'
+            }`}
+            title="Ir al Menú Principal (Dashboard)"
+            id="btn-nav-home"
+          >
+            <Home className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Menú</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onNavigate('designer')}
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+              activeSection === 'designer'
+                ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-slate-950 shadow-md shadow-emerald-950/60 font-black'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-[#121f16]'
+            }`}
+            title="Ir a la Pizarra Táctica"
+            id="btn-nav-designer"
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Pizarra</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onOpenSidebar}
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-slate-200 hover:bg-[#121f16] transition-all"
+            title="Abrir Biblioteca de Playbook"
+            id="btn-nav-library"
+          >
+            <FolderOpen className="w-3.5 h-3.5 text-sky-400" />
+            <span className="hidden md:inline">Biblioteca</span>
+          </button>
         </div>
 
-        {/* Vertical divider */}
-        <div className="h-6 w-px bg-[#1b2b20] hidden sm:block" />
-        
-        {/* Current Play Info */}
-        <div className="flex flex-col max-w-[120px] sm:max-w-[160px] lg:max-w-xs truncate">
-          <div className="flex items-center gap-1.5">
-            <h1 className="text-xs sm:text-sm font-bold text-slate-100 truncate tracking-tight uppercase" title={displayedTitle}>
-              {displayedTitle}
-            </h1>
-            {isDirty && (
-              <span className="inline-block w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" title="Cambios sin guardar" />
-            )}
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded uppercase ${getCategoryBadge(displayedCategory)}`}>
-              {displayedCategory === '5v5' ? '5v5 Duelo' : displayedCategory}
-            </span>
-            <span className="text-[10px] text-neutral-400 truncate hidden sm:inline font-mono">
-              {displayedFormation}
-            </span>
-          </div>
-        </div>
+        {/* Current Play Info (Only shown when editing in designer) */}
+        {activeSection === 'designer' && (
+          <>
+            <div className="h-6 w-px bg-[#1b2b20] hidden sm:block" />
+            <div className="flex flex-col max-w-[120px] sm:max-w-[160px] lg:max-w-xs truncate">
+              <div className="flex items-center gap-1.5">
+                <h1 className="text-xs sm:text-sm font-bold text-slate-100 truncate tracking-tight uppercase" title={displayedTitle}>
+                  {displayedTitle}
+                </h1>
+                {isDirty && (
+                  <span className="inline-block w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" title="Cambios sin guardar" />
+                )}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded uppercase ${getCategoryBadge(displayedCategory)}`}>
+                  {displayedCategory === '5v5' ? '5v5 Duelo' : displayedCategory}
+                </span>
+                <span className="text-[10px] text-neutral-400 truncate hidden sm:inline font-mono">
+                  {displayedFormation}
+                </span>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* 2. Center: Segmented View Mode Control (Ofensa | Defensa | 5v5 Duelo) */}
@@ -378,6 +428,23 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           )}
         </div>
+
+        {/* Halcones Academy / Study Mode Button */}
+        {onOpenStudyCenter && (
+          <button
+            type="button"
+            onClick={onOpenStudyCenter}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-black text-xs transition-all uppercase tracking-wider bg-gradient-to-r from-amber-500/20 via-emerald-500/20 to-emerald-500/30 hover:from-amber-500/30 hover:to-emerald-500/40 text-emerald-200 border border-emerald-500/50 shadow-md shadow-emerald-950/50 active:scale-[0.98] group"
+            title="Abrir Academia Halcones (Estudiar Reglas IFAF, Rutas y Playbook)"
+            id="btn-open-study-academy"
+          >
+            <GraduationCap className="w-4 h-4 text-emerald-400 group-hover:rotate-6 transition-transform" />
+            <span className="hidden sm:inline">Academia</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-md bg-emerald-500 text-slate-950 font-black">
+              IFAF
+            </span>
+          </button>
+        )}
 
         {/* Quick Save Full Play Button */}
         <button

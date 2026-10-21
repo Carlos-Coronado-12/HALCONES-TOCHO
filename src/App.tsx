@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { 
   Play, 
   Player, 
-  Route, 
+  Route as PlayRoute, 
   ToolMode, 
   PlaybackState,
   FieldViewMode,
@@ -40,13 +40,22 @@ import { FieldCanvas } from './components/FieldCanvas';
 import { PlayControls } from './components/PlayControls';
 import { PlaybookSidebar } from './components/PlaybookSidebar';
 import { PlayModal } from './components/PlayModal';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { HomePage } from './pages/HomePage';
+import { LibraryPage } from './pages/LibraryPage';
+import { AcademyPage } from './pages/AcademyPage';
 import { FormationPicker } from './components/FormationPicker';
 import { RoutePresetSelector } from './components/RoutePresetSelector';
 import { PlayerDrawer } from './components/PlayerDrawer';
 import { ExportModal } from './components/ExportModal';
 import { ConceptSelector } from './components/ConceptSelector';
+import { StudyCenterModal } from './components/study/StudyCenterModal';
+import { loadUserStudyStats, saveUserStudyStats } from './constants/fundamentalsData';
+import { UserStudyStats } from './types/study';
 
 export const App: React.FC = () => {
+  const navigate = useNavigate();
+
   // SVG Canvas Ref for export and bounding box
   const svgRef = useRef<SVGSVGElement>(null);
 
@@ -88,6 +97,13 @@ export const App: React.FC = () => {
   const [isFormationPickerOpen, setIsFormationPickerOpen] = useState<boolean>(false);
   const [isRoutePresetOpen, setIsRoutePresetOpen] = useState<boolean>(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
+  const [isStudyCenterOpen, setIsStudyCenterOpen] = useState<boolean>(false);
+  const [studyStats, setStudyStats] = useState<UserStudyStats>(() => loadUserStudyStats());
+
+  const handleUpdateStudyStats = (newStats: UserStudyStats) => {
+    setStudyStats(newStats);
+    saveUserStudyStats(newStats);
+  };
 
   // Initial synchronization with Cloud Firestore if configured
   useEffect(() => {
@@ -155,7 +171,7 @@ export const App: React.FC = () => {
     const offenseIds = new Set(effPlayers.filter((p) => p.team === 'offense').map((p) => p.id));
     const defenseIds = new Set(effPlayers.filter((p) => p.team === 'defense').map((p) => p.id));
 
-    let effRoutes: Route[];
+    let effRoutes: PlayRoute[];
     if (viewMode === 'offense') {
       effRoutes = debouncedPlay.routes.filter((r) => offenseIds.has(r.playerId));
     } else if (viewMode === 'defense') {
@@ -868,7 +884,7 @@ export const App: React.FC = () => {
   };
 
   // Add or update route for a player
-  const handleAddOrUpdateRoute = (route: Route, skipHistory: boolean = false) => {
+  const handleAddOrUpdateRoute = (route: PlayRoute, skipHistory: boolean = false) => {
     if (!skipHistory) {
       pushHistory(currentPlay);
     }
@@ -885,7 +901,7 @@ export const App: React.FC = () => {
       }
 
       const existingIdx = prev.routes.findIndex((r) => r.playerId === route.playerId);
-      let updatedRoutes: Route[];
+      let updatedRoutes: PlayRoute[];
 
       if (existingIdx >= 0) {
         updatedRoutes = [...prev.routes];
@@ -904,7 +920,7 @@ export const App: React.FC = () => {
   };
 
   // Apply preset route
-  const handleApplyPresetRoute = (_playerId: string, route: Route) => {
+  const handleApplyPresetRoute = (_playerId: string, route: PlayRoute) => {
     handleAddOrUpdateRoute(route);
   };
 
@@ -1114,97 +1130,164 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-[#0c120e] text-slate-100 overflow-hidden font-sans">
-      {/* Top Application Header */}
-      <Header
-        currentPlay={currentPlay}
-        viewMode={viewMode}
-        onChangeViewMode={setViewMode}
-        defenseScheme={defenseScheme}
-        onChangeDefenseScheme={handleSelectDefenseScheme}
-        onOpenSidebar={() => {
-          setSidebarCategory(viewMode === 'matchup' || viewMode === 'defense' ? 'Defensiva' : 'ALL');
-          setIsSidebarOpen(true);
-        }}
-        onOpenSaveModal={handleQuickSave}
-        onLoadOffense={handleLoadOffense}
-        onSaveOffense={handleSaveOffense}
-        onLoadDefense={handleLoadDefense}
-        onSaveDefense={handleSaveDefense}
-        onExportOffenseJson={handleExportOffenseJson}
-        onExportDefenseJson={handleExportDefenseJson}
-        onNewPlay={handleNewPlay}
-        onOpenFormationPicker={() => setIsFormationPickerOpen(true)}
-        onExportImage={handleExportTacticalImage}
-        onOpenExportModal={() => setIsExportModalOpen(true)}
-        isDirty={isDirty}
-      />
-
-      {/* Main Workspace (Floating Toolbar + Interactive Field + Simulation Controls) */}
-      <div className="flex-1 flex flex-col overflow-hidden relative">
-        {/* Interactive Field Canvas with Floating Tools Palette */}
-        <div className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#0c120e]">
-          <div className="flex-1 relative flex items-center justify-center bg-[#0c120e] overflow-hidden">
-            {/* Draggable Minimalist Paint-Style Floating Window */}
-            <Toolbar
-              currentMode={currentMode}
-              onSelectMode={(mode) => setCurrentMode(mode)}
-              zoneShape={zoneShape}
-              onSelectZoneShape={(shape) => setZoneShape(shape)}
-              onOpenPresetRoutes={() => setIsRoutePresetOpen(true)}
-              onOpenConcepts={() => setIsConceptOpen(true)}
-              onFlipPlay={handleFlipPlay}
-              snapEnabled={snapEnabled}
-              onToggleSnap={() => setSnapEnabled((prev) => !prev)}
-              onClearRoutes={handleClearAllRoutes}
-              onResetFormation={() => handleSelectFormation(FORMATION_PRESETS[0])}
-              onAddPlayer={handleAddPlayer}
-              canUndo={history.length > 0}
-              onUndo={handleUndo}
+    <div className="flex flex-col h-screen w-screen bg-[#070d09] text-slate-100 overflow-hidden font-sans">
+      <Routes>
+        {/* Ruta 1: Menú Principal (Sin Header superior) */}
+        <Route
+          path="/"
+          element={
+            <HomePage
+              plays={plays}
+              currentPlay={currentPlay}
+              studyStats={studyStats}
+              onSelectPlay={(p) => {
+                handleSelectPlay(p);
+                navigate('/pizarra');
+              }}
+              onOpenExportModal={() => setIsExportModalOpen(true)}
             />
+          }
+        />
 
-            <FieldCanvas
-              play={currentPlay}
-              currentMode={currentMode}
-              zoneShape={zoneShape}
-              playback={playback}
-              viewMode={viewMode}
-              defenseScheme={defenseScheme}
-              snapEnabled={snapEnabled}
-              selectedPlayerId={selectedPlayer?.id || null}
-              onSelectPlayer={(player) => setSelectedPlayer(player)}
-              onUpdatePlayerPosition={handleUpdatePlayerPosition}
-              onAddOrUpdateRoute={handleAddOrUpdateRoute}
-              onDeleteRoute={handleDeleteRoute}
-              onAddOrUpdateZone={handleAddOrUpdateZone}
-              onDeleteZone={handleDeleteZone}
-              onUpdateLosY={handleUpdateLosY}
-              onResetPlayback={() => setPlayback((prev) => ({ ...prev, isPlaying: false, progress: 0 }))}
-              onOpenPresetRoutesModal={() => setIsRoutePresetOpen(true)}
-              svgRef={svgRef}
-              flagPullEvent={flagPullEvent}
+        {/* Ruta 2: Pizarra Táctica (Con Header superior táctico y controles de campo) */}
+        <Route
+          path="/pizarra"
+          element={
+            <div className="flex flex-col h-full w-full overflow-hidden">
+              {/* Header Táctico - SOLO visible en la Pizarra */}
+              <Header
+                currentPlay={currentPlay}
+                viewMode={viewMode}
+                onChangeViewMode={setViewMode}
+                defenseScheme={defenseScheme}
+                onChangeDefenseScheme={handleSelectDefenseScheme}
+                onOpenSidebar={() => {
+                  setSidebarCategory(viewMode === 'matchup' || viewMode === 'defense' ? 'Defensiva' : 'ALL');
+                  setIsSidebarOpen(true);
+                }}
+                onOpenSaveModal={handleQuickSave}
+                onLoadOffense={handleLoadOffense}
+                onSaveOffense={handleSaveOffense}
+                onLoadDefense={handleLoadDefense}
+                onSaveDefense={handleSaveDefense}
+                onExportOffenseJson={handleExportOffenseJson}
+                onExportDefenseJson={handleExportDefenseJson}
+                onNewPlay={handleNewPlay}
+                onOpenFormationPicker={() => setIsFormationPickerOpen(true)}
+                onExportImage={handleExportTacticalImage}
+                onOpenExportModal={() => setIsExportModalOpen(true)}
+                onOpenStudyCenter={() => navigate('/academia')}
+                activeSection="designer"
+                onNavigate={(sec) => {
+                  if (sec === 'home') navigate('/');
+                  else if (sec === 'designer') navigate('/pizarra');
+                  else if (sec === 'academy') navigate('/academia');
+                }}
+                isDirty={isDirty}
+              />
+
+              {/* Espacio de Trabajo Principal (Toolbar + FieldCanvas + PlayControls) */}
+              <div className="flex-1 flex flex-col overflow-hidden relative">
+                <div className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#0c120e]">
+                  <div className="flex-1 relative flex items-center justify-center bg-[#0c120e] overflow-hidden">
+                    <Toolbar
+                      currentMode={currentMode}
+                      onSelectMode={(mode) => setCurrentMode(mode)}
+                      zoneShape={zoneShape}
+                      onSelectZoneShape={(shape) => setZoneShape(shape)}
+                      onOpenPresetRoutes={() => setIsRoutePresetOpen(true)}
+                      onOpenConcepts={() => setIsConceptOpen(true)}
+                      onFlipPlay={handleFlipPlay}
+                      snapEnabled={snapEnabled}
+                      onToggleSnap={() => setSnapEnabled((prev) => !prev)}
+                      onClearRoutes={handleClearAllRoutes}
+                      onResetFormation={() => handleSelectFormation(FORMATION_PRESETS[0])}
+                      onAddPlayer={handleAddPlayer}
+                      canUndo={history.length > 0}
+                      onUndo={handleUndo}
+                    />
+
+                    <FieldCanvas
+                      play={currentPlay}
+                      currentMode={currentMode}
+                      zoneShape={zoneShape}
+                      playback={playback}
+                      viewMode={viewMode}
+                      defenseScheme={defenseScheme}
+                      snapEnabled={snapEnabled}
+                      selectedPlayerId={selectedPlayer?.id || null}
+                      onSelectPlayer={(player) => setSelectedPlayer(player)}
+                      onUpdatePlayerPosition={handleUpdatePlayerPosition}
+                      onAddOrUpdateRoute={handleAddOrUpdateRoute}
+                      onDeleteRoute={handleDeleteRoute}
+                      onAddOrUpdateZone={handleAddOrUpdateZone}
+                      onDeleteZone={handleDeleteZone}
+                      onUpdateLosY={handleUpdateLosY}
+                      onResetPlayback={() => setPlayback((prev) => ({ ...prev, isPlaying: false, progress: 0 }))}
+                      onOpenPresetRoutesModal={() => setIsRoutePresetOpen(true)}
+                      svgRef={svgRef}
+                      flagPullEvent={flagPullEvent}
+                    />
+                  </div>
+
+                  <PlayControls
+                    playback={playback}
+                    onTogglePlay={() => setPlayback((prev) => ({ ...prev, isPlaying: !prev.isPlaying }))}
+                    onReset={() => setPlayback((prev) => ({ ...prev, isPlaying: false, progress: 0 }))}
+                    onSeek={(progress) => setPlayback((prev) => ({ ...prev, progress }))}
+                    onChangeSpeed={(speed) => setPlayback((prev) => ({ ...prev, speed }))}
+                    onToggleLoop={() => setPlayback((prev) => ({ ...prev, loop: !prev.loop }))}
+                    onStep={(delta) =>
+                      setPlayback((prev) => ({
+                        ...prev,
+                        progress: Math.max(0, Math.min(1, prev.progress + delta)),
+                      }))
+                    }
+                    flagPullEvent={flagPullEvent}
+                    onToggleStopAtFlagPull={() => setPlayback((prev) => ({ ...prev, stopAtFlagPull: !prev.stopAtFlagPull }))}
+                  />
+                </div>
+              </div>
+            </div>
+          }
+        />
+
+        {/* Ruta 3: Casillero / Biblioteca de Jugadas Completa */}
+        <Route
+          path="/casillero"
+          element={
+            <LibraryPage
+              plays={plays}
+              currentPlay={currentPlay}
+              onSelectPlay={(p) => {
+                handleSelectPlay(p);
+                navigate('/pizarra');
+              }}
+              onNewPlay={() => {
+                handleNewPlay();
+                navigate('/pizarra');
+              }}
+              onDuplicatePlay={handleDuplicatePlay}
+              onDeletePlay={handleDeletePlay}
             />
-          </div>
+          }
+        />
 
-          {/* Bottom Simulation & Playback Controls */}
-          <PlayControls
-            playback={playback}
-            onTogglePlay={() => setPlayback((prev) => ({ ...prev, isPlaying: !prev.isPlaying }))}
-            onReset={() => setPlayback((prev) => ({ ...prev, isPlaying: false, progress: 0 }))}
-            onSeek={(progress) => setPlayback((prev) => ({ ...prev, progress }))}
-            onChangeSpeed={(speed) => setPlayback((prev) => ({ ...prev, speed }))}
-            onToggleLoop={() => setPlayback((prev) => ({ ...prev, loop: !prev.loop }))}
-            onStep={(delta) =>
-              setPlayback((prev) => ({
-                ...prev,
-                progress: Math.max(0, Math.min(1, prev.progress + delta)),
-              }))
-            }
-            flagPullEvent={flagPullEvent}
-            onToggleStopAtFlagPull={() => setPlayback((prev) => ({ ...prev, stopAtFlagPull: !prev.stopAtFlagPull }))}
-          />
-        </div>
-      </div>
+        {/* Ruta 4: Academia Halcones (IFAF, Rutas, Quiz, Coberturas) */}
+        <Route
+          path="/academia"
+          element={
+            <AcademyPage
+              plays={plays}
+              studyStats={studyStats}
+              onUpdateStudyStats={handleUpdateStudyStats}
+            />
+          }
+        />
+
+        {/* Fallback de rutas */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
 
       {/* Playbook Sidebar Drawer */}
       <PlaybookSidebar
@@ -1292,6 +1375,15 @@ export const App: React.FC = () => {
           if (updatedList.length > 0) setCurrentPlay(updatedList[0]);
         }}
         onResetToDefaults={handleResetToDefaults}
+      />
+
+      {/* Halcones Academy Study Center Modal */}
+      <StudyCenterModal
+        isOpen={isStudyCenterOpen}
+        onClose={() => setIsStudyCenterOpen(false)}
+        plays={plays}
+        stats={studyStats}
+        onUpdateStats={handleUpdateStudyStats}
       />
     </div>
   );

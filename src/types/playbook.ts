@@ -1,4 +1,5 @@
 export type TeamSide = 'offense' | 'defense';
+export type AppSectionView = 'home' | 'designer' | 'library' | 'academy';
 
 export type PlayerRole = 
   | 'QB' 
