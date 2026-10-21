@@ -18,6 +18,8 @@ export interface QuizQuestion {
   explanation: string;
   ruleRef?: string;       // Referencia a regla IFAF o técnica
   diagramType?: 'route' | 'field' | 'coverage';
+  routePoints?: { x: number; y: number }[]; // Puntos para el diagrama SVG de la ruta
+  routeNumber?: number;
 }
 
 export interface RouteDefinition {

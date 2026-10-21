@@ -286,9 +286,83 @@ export const FundamentalsQuiz: React.FC<FundamentalsQuizProps> = ({ stats, onUpd
         </div>
 
         {/* The Question Text */}
-        <h3 className="text-base sm:text-lg font-bold text-white mb-6 leading-snug">
+        <h3 className="text-base sm:text-lg font-bold text-white mb-4 leading-snug">
           {currentQ.question}
         </h3>
+
+        {/* Visual Route Diagram when routePoints are defined */}
+        {currentQ.routePoints && currentQ.routePoints.length >= 2 && (
+          <div className="mb-6 flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-200">
+            <div className="w-full max-w-[360px] aspect-[4/3] rounded-2xl border border-emerald-500/40 bg-gradient-to-b from-[#09180e] to-[#040a06] p-2 relative shadow-xl overflow-hidden group">
+              <svg
+                viewBox="0 0 100 100"
+                className="w-full h-full select-none"
+              >
+                <defs>
+                  <pattern id="quizFieldGrid" width="10" height="10" patternUnits="userSpaceOnUse">
+                    <path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5" />
+                  </pattern>
+                  <marker id="quizArrowHead" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#10b981" />
+                  </marker>
+                  <filter id="quizGlow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="0" dy="0" stdDeviation="1.5" floodColor="#34d399" floodOpacity="0.9" />
+                  </filter>
+                </defs>
+
+                {/* Grass Grid */}
+                <rect width="100" height="100" fill="url(#quizFieldGrid)" />
+
+                {/* Sidelines & Boundaries */}
+                <rect x="5" y="5" width="90" height="90" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="0.8" rx="2" />
+
+                {/* Yard lines */}
+                <line x1="5" y1="20" x2="95" y2="20" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" strokeDasharray="1,1" />
+                <text x="7" y="19" fill="rgba(255,255,255,0.3)" fontSize="3" fontWeight="bold">15 YDS (PROFUNDO)</text>
+
+                <line x1="5" y1="45" x2="95" y2="45" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" strokeDasharray="1,1" />
+                <text x="7" y="44" fill="rgba(255,255,255,0.3)" fontSize="3" fontWeight="bold">10 YDS (INTERMEDIO)</text>
+
+                <line x1="5" y1="65" x2="95" y2="65" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" strokeDasharray="1,1" />
+                <text x="7" y="64" fill="rgba(255,255,255,0.3)" fontSize="3" fontWeight="bold">5 YDS (CORTO)</text>
+
+                {/* Line of Scrimmage (LOS) */}
+                <line x1="5" y1="80" x2="95" y2="80" stroke="#00a859" strokeWidth="1.2" />
+                <text x="7" y="79" fill="#00bf65" fontSize="3.2" fontWeight="black">L.O.S. (LÍNEA DE GOLPEO)</text>
+
+                {/* Sidelines indications */}
+                <text x="96" y="50" fill="rgba(255,255,255,0.25)" fontSize="2.8" transform="rotate(90 96,50)" textAnchor="middle">
+                  BANDA LATERAL (OUTSIDE)
+                </text>
+                <text x="4" y="50" fill="rgba(255,255,255,0.25)" fontSize="2.8" transform="rotate(-90 4,50)" textAnchor="middle">
+                  CENTRO DEL CAMPO (INSIDE)
+                </text>
+
+                {/* The Drawn Route Path */}
+                <path
+                  d={currentQ.routePoints.reduce((acc, curr, i) => `${acc} ${i === 0 ? 'M' : 'L'} ${curr.x} ${curr.y}`, '')}
+                  fill="none"
+                  stroke="#10b981"
+                  strokeWidth="3.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  markerEnd="url(#quizArrowHead)"
+                  filter="url(#quizGlow)"
+                />
+
+                {/* Starting Player Circle */}
+                <circle cx={currentQ.routePoints[0].x} cy={currentQ.routePoints[0].y} r="3.2" fill="#38bdf8" stroke="#0284c7" strokeWidth="1" />
+                <text x={currentQ.routePoints[0].x} y={currentQ.routePoints[0].y + 5.5} fill="#94a3b8" fontSize="2.8" textAnchor="middle" fontWeight="black">
+                  WR
+                </text>
+              </svg>
+
+              <div className="absolute top-2 right-2 px-2.5 py-0.5 rounded-full bg-emerald-950/90 border border-emerald-500/50 text-[10px] font-mono font-black text-emerald-300 shadow-md">
+                Diagrama de Ruta
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Options Grid */}
         <div className="space-y-3 mb-6">
